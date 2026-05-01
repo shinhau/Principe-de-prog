@@ -1,0 +1,90 @@
+from db import get_connection
+
+def get_all_student():
+    conn=get_connection()
+    cursor = conn.cursor(dictionnary = True)
+
+    conn.execute("Select * from Students")
+    result = cursor.fetchall()
+    cursor.close() 
+    conn.close()
+    
+    return result
+def get_student_by_id(student_id):
+    conn = get_connection()
+    cursor = conn.cursor(dictionary=True)
+
+    query = "SELECT * FROM students WHERE id = %s"
+
+    cursor.execute(query,(student_id,))
+
+    student = cursor.fetchone()
+
+    cursor.close()
+    conn.close()
+
+    return student
+
+def add_student(data):
+    conn = get_connection()
+    cursor = conn.cursor(dictionary=True)
+    sql = "INSERT INTO students (prenom, age) VALUES (%s, %s)"
+    valeurs = (data['prenom'], data['age'])
+
+    cursor.execute(sql,valeurs)
+    conn.commit()
+
+    cursor.close()
+    conn.close()
+
+    return "Etudiant ajouté"
+
+def update_student(identifiant, data):
+    conn = get_connection()
+    cursor = conn.cursor(dictionary=True)
+    query = "SELECT * FROM students WHERE id = %s"
+    cursor.execute(query, (identifiant,))
+    existe = cursor.fetchone()
+    if existe is None or len(data) == 0:
+        return 0
+
+    champs = []
+    valeur = []
+    for key, values in data.items():
+        champs.append(f"{key} = %s")
+        valeur.append(values)
+    set_clause = ', '.join(champs)
+
+    query = f"UPDATE students SET {set_clause} WHERE id = %s"
+    valeur.append(identifiant)
+    valeur = tuple(valeur)
+    cursor.execute(query,valeur)
+    conn.commit()
+    row_count = cursor.rowcount
+
+    cursor.close()
+    conn.close()
+
+    return row_count
+
+def delete_student(identifiant):
+    conn = get_connection()
+    cursor = conn.cursor(dictionary=True)
+    requete = "DELETE FROM students WHERE id = %s"
+    cursor.execute(requete, (identifiant,))
+    conn.commit()
+    row_count = cursor.rowcount
+
+    requete = "SELECT COUNT(*) as total FROM students"
+    cursor.execute(requete)
+    sortie = cursor.fetchone()
+    if sortie["total"] == 0:
+        cursor.execute("TRUNCATE TABLE students")
+        conn.commit()
+    cursor.close()
+    conn.close()
+
+    return row_count
+
+
+    return result
